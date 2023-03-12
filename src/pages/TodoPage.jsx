@@ -1,4 +1,5 @@
 import { Footer, Header, TodoCollection, TodoInput } from 'components';
+import { useState } from 'react';
 
 const dummyTodos = [
   {
@@ -24,13 +25,119 @@ const dummyTodos = [
 ];
 
 const TodoPage = () => {
+  const [inputValue, setInputValue] = useState('');
+  const [todos, setTodos] = useState(dummyTodos);
+
+  const handleChange = (value) => {
+    setInputValue(value);
+  };
+
+  const handleAddTodo = () => {
+    if (inputValue.length === 0) {
+      return; //如果inputValue長度為0，回傳本來的todos
+    }
+    setTodos((prevTodos) => {
+      return [
+        ...prevTodos,
+        {
+          id: Math.random() * 100,
+          title: inputValue,
+          isDone: false,
+        },
+      ];
+    });
+    setInputValue('');
+  };
+
+  const handleKeyDown = () => {
+    if (inputValue.length === 0) {
+      return; //如果inputValue長度為0，回傳本來的todos
+    }
+    setTodos((prevTodos) => {
+      //獲取當前的Todos
+      return [
+        ...prevTodos,
+        {
+          id: Math.random() * 100,
+          title: inputValue,
+          isDone: false,
+        },
+      ];
+    });
+    setInputValue('');
+  };
+
+  const handleToggleDone = (id) => {
+    //從子層獲取的資訊是id，這樣就會知道是哪一筆資料需要更新
+    setTodos((prevTodos) => {
+      //獲取當前的Todos
+      return prevTodos.map((todo) => {
+        //使用.map遍歷當前Todos
+        if (todo.id === id) {
+          //如果遍歷的todo.id等於子層傳上來的id
+          return {
+            ...todo,
+            isDone: !todo.isDone, // 使用!改變原本isDone的狀態
+          };
+        }
+        return todo;
+      });
+    });
+  };
+
+  const handleChangeMode = ({ id, isEdit }) => {
+    setTodos((prevTodos) => {
+      return prevTodos.map((todo) => {
+        if (todo.id === id) {
+          return {
+            ...todo,
+            isEdit,
+          };
+        }
+        return { ...todo, isEdit: false };
+      });
+    });
+  };
+
+  const handleSave = ({ id, title }) => {
+    setTodos((prevTodos) => {
+      return prevTodos.map((todo) => {
+        if (todo.id === id) {
+          return {
+            ...todo,
+            title,
+            isEdit: false,
+          };
+        }
+        return todo;
+      });
+    });
+  };
+
+  const handleDelete = (id) => {
+    setTodos((prevTodos) => {
+      return prevTodos.filter((todo) => todo.id !== id);
+    });
+  };
+
   return (
     <div>
       TodoPage
       <Header />
-      <TodoInput />
-      <TodoCollection />
-      <Footer />
+      <TodoInput
+        inputValue={inputValue}
+        onChange={handleChange}
+        onAddTodo={handleAddTodo}
+        onKeyDown={handleKeyDown}
+      />
+      <TodoCollection
+        todos={todos}
+        onToggleDone={handleToggleDone}
+        onChangeMode={handleChangeMode}
+        onSave={handleSave}
+        onDelete={handleDelete}
+      />
+      <Footer todosQty={todos.length} />
     </div>
   );
 };

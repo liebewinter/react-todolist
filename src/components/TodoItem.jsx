@@ -4,6 +4,8 @@ import {
   CheckCircleIcon,
   CheckHoverIcon,
 } from 'assets/images';
+import clsx from 'clsx';
+import { useRef } from 'react';
 
 const StyledTaskItem = styled.div`
   min-height: 52px;
@@ -100,18 +102,47 @@ const StyledTaskItem = styled.div`
   }
 `;
 
-const TodoItem = () => {
+const TodoItem = ({ todo, onSave, onDelete, onToggleDone, onChangeMode }) => {
+  const inputRef = useRef(null);
+  const handleKeyDown = (event) => {
+    if (inputRef.current.value.length > 0 && event.key === 'Enter') {
+      onSave?.({ id: todo.id, title: inputRef.current.value }); //取得當前輸入框的內容
+    }
+    if (event.key === 'Escape') {
+      onChangeMode?.({ id: todo.id, isEdit: false }); //傳到父層的資料
+    }
+  };
   return (
-    <StyledTaskItem>
+    <StyledTaskItem
+      className={clsx('', { done: todo.isDone }, { edit: todo.isEdit })}
+    >
       <div className="task-item-checked">
-        <span className="icon icon-checked" />
+        <span
+          className="icon icon-checked"
+          onClick={() => {
+            onToggleDone?.(todo.id);
+          }}
+        />
+        {/* 點擊check之後觸發onToggleDone的事件並往父層TodoCollection傳遞，往上傳遞todo.id */}
       </div>
-      <div className="task-item-body">
-        <span className="task-item-body-text">todo</span>
-        <input className="task-item-body-input" />
+      <div
+        className="task-item-body"
+        onDoubleClick={() => onChangeMode?.({ id: todo.id, isEdit: true })}
+      >
+        <span className="task-item-body-text">{todo.title}</span>
+        <input
+          ref={inputRef}
+          className="task-item-body-input"
+          // value={todo.title}
+          onKeyDown={handleKeyDown}
+          defaultValue={todo.title}
+        />
       </div>
       <div className="task-item-action ">
-        <button className="btn-reset btn-destroy icon"></button>
+        <button
+          className="btn-reset btn-destroy icon"
+          onClick={() => onDelete?.(todo.id)}
+        ></button>
       </div>
     </StyledTaskItem>
   );
